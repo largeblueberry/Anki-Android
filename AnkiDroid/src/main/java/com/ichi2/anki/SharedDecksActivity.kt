@@ -29,7 +29,6 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
@@ -69,8 +68,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
      * History should not be cleared before the page finishes loading otherwise there would be
      * an extra entry in the history since the previous page would not get cleared.
      */
-    @VisibleForTesting
-    internal val webViewClient =
+    private val webViewClient =
         object : WebViewClient() {
             private var redirectTimes = 0
 
@@ -121,7 +119,6 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
                 CookieManager.getInstance()
             }
 
-            @VisibleForTesting
             private val isLoggedInToAnkiWeb: Boolean
                 get() {
                     try {
@@ -146,10 +143,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
                 super.onReceivedHttpError(view, request, errorResponse)
 
                 var shouldRedirectToLogin =
-                    shouldRedirectToLogIn(
-                        errorResponse?.statusCode,
-                        isLoggedInToAnkiWeb,
-                    )
+                    shouldRedirectToLogIn(errorResponse?.statusCode, isLoggedInToAnkiWeb)
 
                 if (shouldRedirectToLogin) {
                     // The following cases are handled below:
@@ -209,7 +203,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
     companion object {
         const val SHARED_DECKS_DOWNLOAD_FRAGMENT = "SharedDecksDownloadFragment"
         const val DOWNLOAD_FILE = "DownloadFile"
-        private const val HTTP_STATUS_TOO_MANY_REQUESTS = 429
+        const val HTTP_STATUS_TOO_MANY_REQUESTS = 429
 
         /**
          * Determines whether the HTTP error redirects to the login/signup page.

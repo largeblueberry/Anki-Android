@@ -15,6 +15,7 @@
  */
 package com.ichi2.anki
 
+import com.ichi2.anki.SharedDecksActivity.Companion.HTTP_STATUS_TOO_MANY_REQUESTS
 import com.ichi2.anki.SharedDecksActivity.Companion.shouldRedirectToLogIn
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,7 +29,7 @@ class SharedDecksActivityTest {
 
         val shouldRedirectToLogin = shouldRedirectToLogIn(statusCode, isLoggedIn)
 
-        assertTrue("Should return True if a 429 error occurs while not logged in", shouldRedirectToLogin)
+        assertTrue(shouldRedirectToLogin)
     }
 
     @Test
@@ -38,10 +39,6 @@ class SharedDecksActivityTest {
 
         val shouldRedirectToLogin = shouldRedirectToLogIn(statusCode, isLoggedIn)
 
-        assertFalse("Should return False if a 429 error occurs while ALREADY logged in", shouldRedirectToLogin)
-    }
-
-    companion object {
-        const val HTTP_STATUS_TOO_MANY_REQUESTS = 429
+        assertFalse(shouldRedirectToLogin)
     }
 }
