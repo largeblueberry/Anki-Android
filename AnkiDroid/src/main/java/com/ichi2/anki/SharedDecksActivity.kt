@@ -70,7 +70,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
      * an extra entry in the history since the previous page would not get cleared.
      */
     @VisibleForTesting
-    private val webViewClient =
+    internal val webViewClient =
         object : WebViewClient() {
             private var redirectTimes = 0
 
@@ -145,23 +145,18 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
             ) {
                 super.onReceivedHttpError(view, request, errorResponse)
 
-                shouldRedirectToLogIn(errorResponse?.statusCode, isLoggedInToAnkiWeb)
-            }
+                var shouldRedirectToLogin =
+                    shouldRedirectToLogIn(
+                        errorResponse?.statusCode,
+                        isLoggedInToAnkiWeb,
+                    )
 
-            fun shouldRedirectToLogIn(
-                statusCode: Int?,
-                isLoggedIn: Boolean,
-            ) {
-                if (statusCode != HTTP_STATUS_TOO_MANY_REQUESTS) return
-
-                // If a user is logged in, they see: "Daily limit exceeded; please try again tomorrow."
-                // We have nothing we can do here
-                if (isLoggedIn) return
-
-                // The following cases are handled below:
-                // "Please log in to download more decks." - on clicking "Download"
-                // "Please log in to perform more searches" - on searching
-                redirectUserToSignUpOrLogin()
+                if (shouldRedirectToLogin) {
+                    // The following cases are handled below:
+                    // "Please log in to download more decks." - on clicking "Download"
+                    // "Please log in to perform more searches" - on searching
+                    redirectUserToSignUpOrLogin()
+                }
             }
 
             override fun onReceivedError(
@@ -215,6 +210,22 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
         const val SHARED_DECKS_DOWNLOAD_FRAGMENT = "SharedDecksDownloadFragment"
         const val DOWNLOAD_FILE = "DownloadFile"
         private const val HTTP_STATUS_TOO_MANY_REQUESTS = 429
+
+        /**
+         * Determines whether the HTTP error redirects to the login/signup page.
+         */
+        fun shouldRedirectToLogIn(
+            statusCode: Int?,
+            isLoggedIn: Boolean,
+        ): Boolean {
+            if (statusCode != HTTP_STATUS_TOO_MANY_REQUESTS) return false
+
+            // If a user is logged in, they see: "Daily limit exceeded; please try again tomorrow."
+            // We have nothing we can do here
+            if (isLoggedIn) return false
+
+            return true
+        }
     }
 
     // Show WebView with AnkiWeb shared decks with the functionality to capture downloads and import decks.
