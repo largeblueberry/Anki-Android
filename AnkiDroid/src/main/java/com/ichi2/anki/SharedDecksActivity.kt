@@ -29,6 +29,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
@@ -68,6 +69,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
      * History should not be cleared before the page finishes loading otherwise there would be
      * an extra entry in the history since the previous page would not get cleared.
      */
+    @VisibleForTesting
     private val webViewClient =
         object : WebViewClient() {
             private var redirectTimes = 0
@@ -119,6 +121,7 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
                 CookieManager.getInstance()
             }
 
+            @VisibleForTesting
             private val isLoggedInToAnkiWeb: Boolean
                 get() {
                     try {
@@ -142,11 +145,18 @@ class SharedDecksActivity : AnkiActivity(R.layout.activity_shared_decks) {
             ) {
                 super.onReceivedHttpError(view, request, errorResponse)
 
-                if (errorResponse?.statusCode != HTTP_STATUS_TOO_MANY_REQUESTS) return
+                shouldRedirectToLogIn(errorResponse?.statusCode, isLoggedInToAnkiWeb)
+            }
+
+            fun shouldRedirectToLogIn(
+                statusCode: Int?,
+                isLoggedIn: Boolean,
+            ) {
+                if (statusCode != HTTP_STATUS_TOO_MANY_REQUESTS) return
 
                 // If a user is logged in, they see: "Daily limit exceeded; please try again tomorrow."
                 // We have nothing we can do here
-                if (isLoggedInToAnkiWeb) return
+                if (isLoggedIn) return
 
                 // The following cases are handled below:
                 // "Please log in to download more decks." - on clicking "Download"
